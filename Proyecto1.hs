@@ -10,7 +10,7 @@
     - 1 vaso = 1L cerveza
     - Se sirve desde cualquier barril que cumpla con la cantidad solicitada
     Barril
-    - Diferentes capacidades
+    - Diferentes capacidades máximas
     - Tienen una salida para servir en el vaso
     - Transferencias entre ellos respetan sus capacidades máximas
     - Posibles transferencias A <-> B <-> C 
@@ -34,26 +34,34 @@ validatedBarrel (maxCapacity, currentAmount) = (notNegative maxCapacity, notNega
 type Barrel = (Int, Int) -- (capacidad máxima, cantidad actual)
 
 initialBarrels :: Barrel -> Barrel -> Barrel -> (Barrel, Barrel, Barrel)
-initialBarrels a b c = (validatedBarrel a, validatedBarrel b, validatedBarrel c)
+initialBarrels a b c = (validatedBarrel a, validatedBarrel b, validatedBarrel c) -- Validación de negativo
 
 {-- 
     Parte 2: Existe solución 
     - Recibir los tres barriles y el objetivo de vasos de cerveza 
     - Devolver un booleano verificando si el estado actual de los barriles garantiza una posible solución
 --}
-
 isSolution :: (Barrel, Barrel, Barrel) -> Int -> Bool
 isSolution (a, b, c) objective = maxCurrent >= objective
     where 
-        (_, currentA) = a -- Cantidad actual de A
-        (_, currentB) = b -- Cantidad actual de B
-        (_, currentC) = c -- Cantidad actual de C
-        maxCurrent = max currentA (max currentB currentC) -- Máximo entre cantidades actuales
+        (_, currentAmountA) = a -- Cantidad actual de A
+        (_, currentAmountB) = b -- Cantidad actual de B
+        (_, currentAmountC) = c -- Cantidad actual de C
+        maxCurrent = max currentAmountA (max currentAmountB currentAmountC) -- Máximo entre cantidades actuales
 
 {-- 
-Parte 3: Añadir cerveza 
+    Parte 3: Añadir cerveza 
+    - Recibir la cantidad de cerveza a añadir y el barril
+    - Devolver el barril con la cantidad añadida y la cantidad de cerveza a transferir al barril vecino (si desborda/sobrepasa su capacidad máxima)
 --}
-
+addBeer :: Int -> Barrel -> (Barrel, Int)
+addBeer amountToAdd (maxCapacity, currentAmount) = ((maxCapacity, realAmount), overflowAmount)
+    where
+        validatedAmountToAdd = notNegative amountToAdd -- Validación de negativo
+        fakeAmount = currentAmount + validatedAmountToAdd -- Cantidad ideal a añadir (ignorando la capacidad máxima)
+        realAmount = min fakeAmount maxCapacity -- Cantidad real que se permite añadir (usando la capacidad máxima)
+        overflowAmount = fakeAmount - realAmount -- Desbordamiento al vecino (la cantidad de cerveza no pudo entrar) si lo hay
+        
 {-- 
-Parte 4: Mejor solución 
+    Parte 4: Mejor solución 
 --}
