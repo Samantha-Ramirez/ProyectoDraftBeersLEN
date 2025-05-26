@@ -73,21 +73,18 @@ addBeer amountToAdd (maxCapacity, currentAmount) = ((maxCapacity, realAmount), o
     - Si no hay mejor solución (no se agrega nada) se retorna (0, (estado inicial))
 --}
 totalCapacity :: (Barrel, Barrel, Barrel) -> Int
-totalCapacity ((maxCapacityA, _), (maxCapacityB, _), (maxCapacityC, _)) = maxCapacityA + maxCapacityB + maxCapacityC
+totalCapacity ((maxCapacityA, _), (maxCapacityB, _), (maxCapacityC, _)) = max maxCapacityA (max maxCapacityB maxCapacityC) -- Suma de las capacidades máximas
 
 transferBOverflow :: Int -> Barrel -> Barrel -> (Barrel, Barrel)
-transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, currentAmountC) =
-    ((maxCapacityA, newCurrentAmountA), (maxCapacityC, newCurrentAmountC))
-    where
-        diffCur = currentAmountA - currentAmountC
-        a_gets_it_multiplier = 1 - signum (max 0 diffCur)
-        c_gets_it_multiplier = max 0 (signum diffCur)
-
-        (barrelA_after_overflow, _) = addBeer overflow (maxCapacityA, currentAmountA) 
-        (barrelC_after_overflow, _) = addBeer overflow (maxCapacityC, currentAmountC)
-
-        newCurrentAmountA = snd barrelA_after_overflow * a_gets_it_multiplier + currentAmountA * c_gets_it_multiplier
-        newCurrentAmountC = snd barrelC_after_overflow * c_gets_it_multiplier + currentAmountC * a_gets_it_multiplier
+transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, currentAmountC)
+    -- Si la cantidad actual de A es menor o igual que la de C, A recibe el desborde
+    | currentAmountA <= currentAmountC = 
+        let ((newMaxA, newCurA), _) = addBeer overflow (maxCapacityA, currentAmountA)
+        in ((newMaxA, newCurA), (maxCapacityC, currentAmountC))
+    -- Si la cantidad actual de C es menor que la de A, C recibe el desborde
+    | currentAmountC < currentAmountA = 
+        let ((newMaxC, newCurC), _) = addBeer overflow (maxCapacityC, currentAmountC)
+        in ((maxCapacityA, currentAmountA), (newMaxC, newCurC))
 
 addAndTransferA :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
 addAndTransferA amount (a, b, c) =
