@@ -1,3 +1,4 @@
+type Barrel = (Int, Int) -- (capacidad máxima, cantidad actual)
 -- Caso de prueba Parte 1
 barrelA :: Barrel
 barrelA = (10, 10)
@@ -66,3 +67,9 @@ testCase44 :: (Int, (Barrel, Barrel, Barrel))
 testCase44 = findBestSolution 6 ((10, 2), (7, 5), (4, 2))
 -- > testCase44
 -- (3, ((10, 2), (7, 6), (4, 4)))
+
+-- Caso de prueba Parte 4
+testCase45 :: (Int, (Barrel, Barrel, Barrel))
+testCase45 = findBestSolution 6 ((1, 1), (7, 2), (4, 3))
+-- > testCase45
+-- (4, ((1, 1), (7, 6), (4, 3)))
