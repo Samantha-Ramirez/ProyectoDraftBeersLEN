@@ -23,8 +23,13 @@
 notNegative :: Int -> Int
 notNegative x = max x 0
 
+-- Validación del barril
 validatedBarrel :: Barrel -> Barrel
-validatedBarrel (maxCapacity, currentAmount) = (notNegative maxCapacity, notNegative currentAmount)
+validatedBarrel (maxCapacity, currentAmount) =
+    let validatedMaxCapacity = notNegative maxCapacity
+        validatedCurrentAmount = notNegative currentAmount
+        realCurrent = min validatedCurrentAmount validatedMaxCapacity
+    in (validatedMaxCapacity, realCurrent)
 
 {-- 
     Parte 1: Inicialización de barriles 
@@ -72,9 +77,11 @@ addBeer amountToAdd (maxCapacity, currentAmount) = ((maxCapacity, realAmount), o
     - Si no hay solución se retorna (0, (estado inicial))
     - Si no hay mejor solución (no se agrega nada) se retorna (0, (estado inicial))
 --}
+-- Máximo entre las capacidades
 totalCapacity :: (Barrel, Barrel, Barrel) -> Int
-totalCapacity ((maxCapacityA, _), (maxCapacityB, _), (maxCapacityC, _)) = max maxCapacityA (max maxCapacityB maxCapacityC) -- Máximo de las capacidades
+totalCapacity ((maxCapacityA, _), (maxCapacityB, _), (maxCapacityC, _)) = max maxCapacityA (max maxCapacityB maxCapacityC) 
 
+-- Maneja el desbordamiento de B hacia A o C, dependiendo de cuál tenga menor cantidad actual
 transferBOverflow :: Int -> Barrel -> Barrel -> (Barrel, Barrel)
 transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, currentAmountC)
     -- Si la cantidad actual de A es menor o igual que la de C, A recibe el desborde
@@ -92,12 +99,6 @@ addAndTransferA amount (a, b, c) =
         ((maxCapacityB, curB_from_A), overflowB_from_A_to_Neighbors) = addBeer overflowA b
         (finalA_from_B_overflow, finalC_from_B_overflow) = transferBOverflow overflowB_from_A_to_Neighbors (maxCapacityA, currentAmountAddedA) c
     in (finalA_from_B_overflow, (maxCapacityB, curB_from_A), finalC_from_B_overflow)
-
-addAndTransferB :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
-addAndTransferB amount (a, b, c) =
-    let ((maxCapacityB, currentAmountAddedB), overflowB_to_Neighbors) = addBeer amount b
-        (finalA, finalC) = transferBOverflow overflowB_to_Neighbors a c
-    in (finalA, (maxCapacityB, currentAmountAddedB), finalC)
 
 addAndTransferC :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
 addAndTransferC amount (a, b, c) =
