@@ -65,3 +65,45 @@ addBeer amountToAdd (maxCapacity, currentAmount) = ((maxCapacity, realAmount), o
 {-- 
     Parte 4: Mejor solución 
 --}
+
+addtoA :: (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
+addtoA (a, b, c) = (afterPourA, afterPourB, c)
+    where
+        (afterPourA, overflowA) = addBeer 1 a
+        (afterPourB, overflowB) = addBeer overflowA b
+        
+addtoC :: (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
+addtoC (a, b, c) = (a, afterPourB, afterPourC)
+    where
+        (afterPourC, overflowC) = addBeer 1 c
+        (afterPourB, overflowB) = addBeer overflowC b
+
+
+recursiveA :: Int -> Int -> (Barrel, Barrel, Barrel) -> Maybe(Int, (Barrel, Barrel, Barrel))
+recursiveA amountAdded goal (a,b,c)
+    | isSolution (a,b,c) goal = Just (amountAdded, (a,b,c))
+    | otherwise =
+        let
+            (newA, newB, c)= addtoA (a,b,c)
+            nextStep = recursiveA (amountAdded+1) goal (newA, newB, c)
+        in
+            nextStep
+
+recursiveC :: Int -> Int -> (Barrel, Barrel, Barrel) -> Maybe(Int, (Barrel, Barrel, Barrel))
+recursiveC amountAdded goal (a,b,c)
+    | isSolution (a,b,c) goal = Just (amountAdded, (a,b,c))
+    | otherwise =
+        let
+            (a, newB, newC)= addtoC (a,b,c)
+            nextStep = recursiveA (amountAdded+1) goal (a, newB, newC)
+        in
+            nextStep
+
+amountCompare :: Int ->  (Barrel, Barrel, Barrel) -> Int
+amountCompare  amountAdded (a,b,c) = amountAdded
+
+findBestSolution :: Int -> (Barrel, Barrel, Barrel) -> (Int, (Barrel, Barrel, Barrel))
+findBestSolution :: goal (a,b,c) 
+    | amountCompare recursiveA 0 goal (a,b,c) > amountCompare recursiveC 0 goal (a,b,c) = recursiveC 0 goal (a,b,c)
+    | otherwise = recursiveA 0 goal (a,b,c)
+
