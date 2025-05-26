@@ -28,8 +28,8 @@ validatedBarrel :: Barrel -> Barrel
 validatedBarrel (maxCapacity, currentAmount) =
     let validatedMaxCapacity = notNegative maxCapacity
         validatedCurrentAmount = notNegative currentAmount
-        realCurrent = min validatedCurrentAmount validatedMaxCapacity
-    in (validatedMaxCapacity, realCurrent)
+        realCurrentAmount = min validatedCurrentAmount validatedMaxCapacity
+    in (validatedMaxCapacity, realCurrentAmount)
 
 {-- 
     Parte 1: Inicialización de barriles 
@@ -92,7 +92,7 @@ transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, current
     | otherwise =
         let ((_, newCurrentAmountC), _) = addBeer overflow (maxCapacityC, currentAmountC) -- Ignorar la capacidad máxima devuelta
         in ((maxCapacityA, currentAmountA), (maxCapacityC, newCurrentAmountC))
-        
+
 addAndTransferA :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
 addAndTransferA amount (a, b, c) =
     let ((maxCapacityA, currentAmountAddedA), overflowA) = addBeer amount a -- Rellena el barril A
