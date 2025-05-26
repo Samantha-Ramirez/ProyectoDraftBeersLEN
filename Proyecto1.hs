@@ -79,36 +79,35 @@ addtoC (a, b, c) = (a, afterPourB, afterPourC)
         (afterPourB, overflowB) = addBeer overflowC b
 
 
-recursiveA :: Int -> Int -> (Barrel, Barrel, Barrel) -> Int -> Maybe(Int, (Barrel, Barrel, Barrel))
-recursiveA amountAdded goal (a, b, c) maxRecursive
-    | isSolution (a, b, c) goal = Just (amountAdded, (a, b, c))
-    | amountAdded >= maxRecursive = Just(0, (a, b, c))
+recursiveA :: Int -> Int -> (Barrel, Barrel, Barrel) -> (Int, (Barrel, Barrel, Barrel))
+recursiveA amountAdded goal (a, b, c) 
+    | isSolution (a, b, c) goal = (amountAdded, (a, b, c))
     | otherwise =
-        let
-            (newA, newB, c)= addtoA (a, b, c)
-            nextStep = recursiveA (amountAdded+1) goal (newA, newB, c) (maxRecursive - 1)
-        in
-            nextStep
+    let
+        (newA, newB, c)= addtoA (a, b, c)
+        nextStep = recursiveA (amountAdded + 1) goal (newA, newB, c) 
+    in
+      nextStep
 
-recursiveC :: Int -> Int -> (Barrel, Barrel, Barrel) -> Int -> Maybe(Int, (Barrel, Barrel, Barrel))
-recursiveC amountAdded goal (a, b, c) maxRecursive
-    | isSolution (a, b, c) goal = Just (amountAdded, (a, b, c))
-    | amountAdded >= maxRecursive = Just(0, (a, b, c))
+recursiveC :: Int -> Int -> (Barrel, Barrel, Barrel) -> (Int, (Barrel, Barrel, Barrel))
+recursiveC amountAdded goal (a, b, c) 
+    | isSolution (a, b, c) goal = (amountAdded, (a, b, c))
     | otherwise =
-        let
-            (a, newB, newC)= addtoC (a, b, c)
-            nextStep = recursiveC (amountAdded+1) goal (a, newB, newC) (maxRecursive - 1)
-        in
-            nextStep
+    let
+        (a, newB, newC)= addtoC (a, b, c)
+        nextStep = recursiveC (amountAdded + 1) goal (a, newB, newC) 
+    in
+      nextStep
 
-amountCompare ::Maybe(Int, a) -> Int
-amountCompare (Just (amountAdded, _)) = amountAdded
+amountCompare :: (Int, a) -> Int
+amountCompare (amountAdded, _) = amountAdded
 
-findBestSolution :: Int -> (Barrel, Barrel, Barrel) -> Maybe(Int, (Barrel, Barrel, Barrel))
+
+findBestSolution :: Int -> (Barrel, Barrel, Barrel) -> (Int, (Barrel, Barrel, Barrel))
 findBestSolution goal (a, b, c) =
     let
-        resultA = recursiveA 0 goal (a, b, c) 100
-        resultC = recursiveC 0 goal (a, b, c) 100
+        resultA = recursiveA 0 goal (a, b, c) 
+        resultC = recursiveC 0 goal (a, b, c) 
         amountAddedA = amountCompare resultA 
         amountAddedC = amountCompare resultC 
     in
