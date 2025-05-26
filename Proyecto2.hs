@@ -96,16 +96,16 @@ transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, current
 addAndTransferA :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
 addAndTransferA amount (a, b, c) =
     let ((maxCapacityA, currentAmountAddedA), overflowA) = addBeer amount a -- Rellena el barril A
-        ((maxCapacityB, curB_from_A), overflowB_from_A_to_Neighbors) = addBeer overflowA b -- rellena el barril b
-        (finalA_from_B_overflow, finalC_from_B_overflow) = transferBOverflow overflowB_from_A_to_Neighbors (maxCapacityA, currentAmountAddedA) c -- rellena el barril C de ser necesario
-    in (finalA_from_B_overflow, (maxCapacityB, curB_from_A), finalC_from_B_overflow)
+        ((maxCapacityB, currentAmountBFromA), overflowBFromAToNeighbors) = addBeer overflowA b -- rellena el barril b
+        (finalAFromBOverflow, finalCFromBOverflow) = transferBOverflow overflowBFromAToNeighbors (maxCapacityA, currentAmountAddedA) c -- rellena el barril C de ser necesario
+    in (finalAFromBOverflow, (maxCapacityB, currentAmountBFromA), finalCFromBOverflow)
 
 addAndTransferC :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
 addAndTransferC amount (a, b, c) =
     let ((maxCapacityC, currentAmountAddedC), overflowC) = addBeer amount c -- rellena el barril C
-        ((maxCapacityB, curB_from_C), overflowB_from_C_to_Neighbors) = addBeer overflowC b -- rellena el barril B
-        (finalA_from_B_overflow, finalC_from_B_overflow) = transferBOverflow overflowB_from_C_to_Neighbors a (maxCapacityC, currentAmountAddedC) -- Rellena el barril A de ser necesario
-    in (finalA_from_B_overflow, (maxCapacityB, curB_from_C), finalC_from_B_overflow)
+        ((maxCapacityB, currentAmountBFromC), overflowBFromCToNeighbors) = addBeer overflowC b -- rellena el barril B
+        (finalAFromBOverflow, finalCFromBOverflow) = transferBOverflow overflowBFromCToNeighbors a (maxCapacityC, currentAmountAddedC) -- Rellena el barril A de ser necesario
+    in (finalAFromBOverflow, (maxCapacityB, currentAmountBFromC), finalCFromBOverflow)
 
 findBestSolutionRecursive :: Int -> (Barrel, Barrel, Barrel) -> Int -> (Int, (Barrel, Barrel, Barrel))
 findBestSolutionRecursive n initialBarrels currentAmountToAdd
