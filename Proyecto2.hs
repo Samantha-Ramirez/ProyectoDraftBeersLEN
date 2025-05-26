@@ -83,38 +83,41 @@ totalCapacity ((maxCapacityA, _), (maxCapacityB, _), (maxCapacityC, _)) = max ma
 
 -- Maneja el desbordamiento de B hacia A o C, dependiendo de cuál tenga menor cantidad actual
 transferBOverflow :: Int -> Barrel -> Barrel -> (Barrel, Barrel)
-transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, currentAmountC)
-    -- Si la cantidad actual de A es menor o igual que la de C, A recibe el desborde
-    | currentAmountA <= currentAmountC =
-        let ((_, newCurrentAmountA), _) = addBeer overflow (maxCapacityA, currentAmountA) -- Ignorar la capacidad máxima devuelta
-        in ((maxCapacityA, newCurrentAmountA), (maxCapacityC, currentAmountC)) 
-    -- Si la cantidad actual de C es menor que la de A, C recibe el desborde
-    | otherwise =
-        let ((_, newCurrentAmountC), _) = addBeer overflow (maxCapacityC, currentAmountC) -- Ignorar la capacidad máxima devuelta
-        in ((maxCapacityA, currentAmountA), (maxCapacityC, newCurrentAmountC))
+transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, currentAmountC) =
+    ((maxCapacityA, newCurrentAmountA), (maxCapacityC, newCurrentAmountC))
+    where
+        diffCur = currentAmountA - currentAmountC
+        a_gets_it_multiplier = 1 - signum (max 0 diffCur)
+        c_gets_it_multiplier = max 0 (signum diffCur)
+
+        (barrelA_after_overflow, _) = addBeer overflow (maxCapacityA, currentAmountA) 
+        (barrelC_after_overflow, _) = addBeer overflow (maxCapacityC, currentAmountC)
+
+        newCurrentAmountA = snd barrelA_after_overflow * a_gets_it_multiplier + currentAmountA * c_gets_it_multiplier
+        newCurrentAmountC = snd barrelC_after_overflow * c_gets_it_multiplier + currentAmountC * a_gets_it_multiplier
 
 addAndTransferA :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
 addAndTransferA amount (a, b, c) =
-    let ((maxCapacityA, currentAmountAddedA), overflowA) = addBeer amount a
-        ((maxCapacityB, curB_from_A), overflowB_from_A_to_Neighbors) = addBeer overflowA b
-        (finalA_from_B_overflow, finalC_from_B_overflow) = transferBOverflow overflowB_from_A_to_Neighbors (maxCapacityA, currentAmountAddedA) c
+    let ((maxCapacityA, currentAmountAddedA), overflowA) = addBeer amount a -- Rellena el barril A
+        ((maxCapacityB, curB_from_A), overflowB_from_A_to_Neighbors) = addBeer overflowA b -- rellena el barril b
+        (finalA_from_B_overflow, finalC_from_B_overflow) = transferBOverflow overflowB_from_A_to_Neighbors (maxCapacityA, currentAmountAddedA) c -- rellena el barril C de ser necesario
     in (finalA_from_B_overflow, (maxCapacityB, curB_from_A), finalC_from_B_overflow)
 
 addAndTransferC :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
 addAndTransferC amount (a, b, c) =
-    let ((maxCapacityC, currentAmountAddedC), overflowC) = addBeer amount c
-        ((maxCapacityB, curB_from_C), overflowB_from_C_to_Neighbors) = addBeer overflowC b
-        (finalA_from_B_overflow, finalC_from_B_overflow) = transferBOverflow overflowB_from_C_to_Neighbors a (maxCapacityC, currentAmountAddedC)
+    let ((maxCapacityC, currentAmountAddedC), overflowC) = addBeer amount c -- rellena el barril C
+        ((maxCapacityB, curB_from_C), overflowB_from_C_to_Neighbors) = addBeer overflowC b -- rellena el barril B
+        (finalA_from_B_overflow, finalC_from_B_overflow) = transferBOverflow overflowB_from_C_to_Neighbors a (maxCapacityC, currentAmountAddedC) -- Rellena el barril A de ser necesario
     in (finalA_from_B_overflow, (maxCapacityB, curB_from_C), finalC_from_B_overflow)
 
 findBestSolutionRecursive :: Int -> (Barrel, Barrel, Barrel) -> Int -> (Int, (Barrel, Barrel, Barrel))
 findBestSolutionRecursive n initialBarrels currentAmountToAdd
-    | currentAmountToAdd > (n + totalCapacity initialBarrels) = (0, initialBarrels)
-    | isSolution (addAndTransferA currentAmountToAdd initialBarrels) n = (currentAmountToAdd, addAndTransferA currentAmountToAdd initialBarrels)
-    | isSolution (addAndTransferC currentAmountToAdd initialBarrels) n = (currentAmountToAdd, addAndTransferC currentAmountToAdd initialBarrels)
-    | otherwise = findBestSolutionRecursive n initialBarrels (currentAmountToAdd + 1)
+    | currentAmountToAdd > (n + totalCapacity initialBarrels) = (0, initialBarrels) -- Verifica que sea posible tener una solución
+    | isSolution (addAndTransferA currentAmountToAdd initialBarrels) n = (currentAmountToAdd, addAndTransferA currentAmountToAdd initialBarrels) -- Le agrega el currentAmount de litros de cerveza al barril A y chequea si es solución
+    | isSolution (addAndTransferC currentAmountToAdd initialBarrels) n = (currentAmountToAdd, addAndTransferC currentAmountToAdd initialBarrels) -- Le agrega el currentAmount de litros de cerveza al barril C y chequea si es solución
+    | otherwise = findBestSolutionRecursive n initialBarrels (currentAmountToAdd + 1) -- Al no encontrar solución prueba agregando otro litro más
 
 findBestSolution :: Int -> (Barrel, Barrel, Barrel) -> (Int, (Barrel, Barrel, Barrel))
 findBestSolution n initialBarrels
-    | n > totalCapacity initialBarrels = (0, initialBarrels)
-    | otherwise = findBestSolutionRecursive n initialBarrels 0
+    | n > totalCapacity initialBarrels = (0, initialBarrels) -- Verifica que sea posible tener una solución
+    | otherwise = findBestSolutionRecursive n initialBarrels 0 -- Si existe una solución llama a la función recursiva
