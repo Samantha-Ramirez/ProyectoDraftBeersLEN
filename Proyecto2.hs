@@ -83,19 +83,16 @@ totalCapacity ((maxCapacityA, _), (maxCapacityB, _), (maxCapacityC, _)) = max ma
 
 -- Maneja el desbordamiento de B hacia A o C, dependiendo de cuál tenga menor cantidad actual
 transferBOverflow :: Int -> Barrel -> Barrel -> (Barrel, Barrel)
-transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, currentAmountC) =
-    ((maxCapacityA, newCurrentAmountA), (maxCapacityC, newCurrentAmountC))
-    where
-        diffCur = currentAmountA - currentAmountC
-        a_gets_it_multiplier = 1 - signum (max 0 diffCur)
-        c_gets_it_multiplier = max 0 (signum diffCur)
-
-        (barrelA_after_overflow, _) = addBeer overflow (maxCapacityA, currentAmountA) 
-        (barrelC_after_overflow, _) = addBeer overflow (maxCapacityC, currentAmountC)
-
-        newCurrentAmountA = snd barrelA_after_overflow * a_gets_it_multiplier + currentAmountA * c_gets_it_multiplier
-        newCurrentAmountC = snd barrelC_after_overflow * c_gets_it_multiplier + currentAmountC * a_gets_it_multiplier
-
+transferBOverflow overflow (maxCapacityA, currentAmountA) (maxCapacityC, currentAmountC)
+    -- Si la cantidad actual de A es menor o igual que la de C, A recibe el desborde
+    | currentAmountA <= currentAmountC =
+        let ((_, newCurrentAmountA), _) = addBeer overflow (maxCapacityA, currentAmountA) -- Ignorar la capacidad máxima devuelta
+        in ((maxCapacityA, newCurrentAmountA), (maxCapacityC, currentAmountC)) 
+    -- Si la cantidad actual de C es menor que la de A, C recibe el desborde
+    | otherwise =
+        let ((_, newCurrentAmountC), _) = addBeer overflow (maxCapacityC, currentAmountC) -- Ignorar la capacidad máxima devuelta
+        in ((maxCapacityA, currentAmountA), (maxCapacityC, newCurrentAmountC))
+        
 addAndTransferA :: Int -> (Barrel, Barrel, Barrel) -> (Barrel, Barrel, Barrel)
 addAndTransferA amount (a, b, c) =
     let ((maxCapacityA, currentAmountAddedA), overflowA) = addBeer amount a -- Rellena el barril A
